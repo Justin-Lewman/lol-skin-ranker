@@ -36,8 +36,8 @@ class SkinScraper:
 
         # Usually the LAST {...} is the actual skin JSON object
         raw_json = json_matches[-1]
-        cleaned = raw_json.replace("\\\"", "\"")
-
+        # cleaned = raw_json.replace("\\\"", "\"")
+        cleaned = raw_json.encode('utf-8').decode('unicode_escape')
         try:
             data = json.loads(cleaned)
             data = data["children"][-1]
