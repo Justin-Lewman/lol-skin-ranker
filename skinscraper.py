@@ -1,3 +1,4 @@
+import json
 import re
 
 import bs4
@@ -8,40 +9,97 @@ class SkinScraper:
     def __init__(self, url):
         self.url = url
 
-    def get_skins_by_champion(self):
+    def get_skin_urls(self):
         response = requests.get(self.url)
         data = response.json()["tree"][0]["children"]
         skin_list = []
         for champion in data:
-            skin_list.append({"Champion": champion["label"].split()[-1], "Skin": champion["label"], "Url": "https://lolskin.info/"+champion["url"]})
+            skin_list.append({"Skin": champion["label"], "Url": "https://lolskin.info/"+champion["url"]})
         return skin_list
 
-    def get_skin_info_using_url(self, skin_url):
-        # response = requests.get(skin_url)
-        html = requests.get(skin_url).text
+
+    def get_skin_info_using_url(self,url):
+        """
+        Fetches lolskin.info skin page and extracts:
+          - base skin metadata
+          - chroma names
+          - YouTube video URLs
+          - splash/loadscreen images
+          - release, cost, rarity, etc.
+        """
+        html = requests.get(url, timeout=10).text
         soup = BeautifulSoup(html, "html.parser")
-        skin_info = dict()
-        table = soup.find("table")
-        if not table:
-            return skin_info
 
-        rows = table.find_all("tr")
-        for row in rows:
-            th = row.find("th")
-            td = row.find("td")
-            if not th or not td:
-                continue
+        script_tag = soup.find("script", string=lambda t: t and "skin" in t and "tilePath" in t)
+        if not script_tag:
+            raise RuntimeError("Could not find embedded skin JSON in <script> tags.")
 
-            key = th.get_text(strip=True)
-            value = " ".join(td.stripped_strings)
+        script_text = script_tag.string
 
-            # Remove time difference from Release date
-            if key.lower() == "release date":
-                match = re.match(r"(\d{4}-\d{2}-\d{2})", value)
-                if match:
-                    value = match.group(1)
+        # Extract the JSON portion inside the push() call
+        # It looks like: self.__next_f.push([1,"5:[...JSON...]"])
+        json_matches = re.findall(r'(\{.*\})', script_text, flags=re.DOTALL)
 
-            skin_info[key] = value
-        # TODO add splash, video url for animations, skin features
+        if not json_matches:
+            raise RuntimeError("Could not extract JSON object from script text.")
 
+        # Usually the LAST {...} is the actual skin JSON object
+        raw_json = json_matches[-1]
+        cleaned = raw_json.replace("\\\"", "\"")
+
+
+        try:
+            data = json.loads(cleaned)
+            data = data["children"][-1]
+        except Exception:
+            print("JSON failed to parse. Raw extract:")
+            print(raw_json[:1500])
+            raise
+
+        # # -----------------------------
+        # # Step 2: Navigate to the actual skin object
+        # # -----------------------------
+        while "main" not in data["className"]:
+            data = data["children"][-1]
+        data = data["children"][-2][-1]
+        # print(json.dumps(data, indent=4, ensure_ascii=False))
+        #
+        # # -----------------------------
+        # # Step 3: Build clean result
+        # # -----------------------------
+        skin_layer = data.get("skin")
+        skin_info = {
+            "champion": data.get("championName"),
+            "skin_name": skin_layer.get("name"),
+            "price": skin_layer.get("cost"),
+            "release_date": skin_layer.get("release"),
+            "rarity": skin_layer.get("rarity"),
+            "availability": skin_layer.get("availability"),
+            "loot_eligible": skin_layer.get("looteligible"),
+            "skinlines": [line["name"] for line in skin_layer.get("skinLines", [])],
+            "universes": [u["name"] for u in skin_layer.get("skinUniverses", [])],
+            "description": skin_layer.get("description"),
+            "voice_actors": skin_layer.get("voiceActor", []),
+
+            # Features
+            "new_effects": skin_layer.get("newEffects", False),
+            "new_animations": skin_layer.get("newAnimations", False),
+            "new_recall": skin_layer.get("newRecall", False),
+            "new_voice": skin_layer.get("newVoice", False),
+            "new_quotes": skin_layer.get("newQuotes", False),
+
+            # Images
+            "splash": skin_layer.get("splashPath"),
+            "loadscreen": skin_layer.get("loadScreenPath"),
+
+            # Chromas
+            "chromas": list(skin_layer.get("fandomChromas", dict()).keys()),
+
+            # Videos (convert YouTube IDs -> URLs)
+            "videos": [
+                f"https://www.youtube.com/watch?v={vid_id}"
+                for vid_id in skin_layer.get("videos", [])
+                if isinstance(vid_id, str)
+            ]
+        }
         return skin_info

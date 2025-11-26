@@ -1,21 +1,40 @@
-
-
 class Skin:
-    def __init__(self, name, skin_info):
-        self.Skin_Name = name
-        self.Champion = skin_info.get('Champion', 'Unknown')
-        self.Price = skin_info.get('Price', 'Unknown')
-        self.Release = skin_info.get('Release date', 'Unknown')
-        self.Rarity = skin_info.get('Rarity', 'Unknown')
-        self.Availability = skin_info.get('Availability', 'Unknown')
-        self.Loot_findable = skin_info.get('Loot eligibility', 'Unknown')
-        self.Universes = skin_info.get('Universes', 'Runeterra')
-        self.Skinline = skin_info.get('Skinlines', 'Base')
-        self.Splash_img = skin_info.get('Splash', 'Unknown')
-        self.Animations_video = skin_info.get('Video', 'Unknown')
-        # TODO deal with skin features
-        self.Feature_list = skin_info.get('Feature_list', 'Unknown')
-        self.skin_data = {}
+    def __init__(self, skin_info):
+        # Required fields
+        self.Champion = skin_info.get('champion', 'Unknown')
+        self.Skin_Name = skin_info.get('skin_name', 'Unknown')
+        self.Price = skin_info.get('price', 'Unknown')
+        self.Release = skin_info.get('release_date', 'Unknown')
+        self.Rarity = skin_info.get('rarity', 'Unknown')
+        self.Availability = skin_info.get('availability', 'Unknown')
+        self.Loot_findable = skin_info.get('loot_eligible', False)
+
+        # Lists
+        self.Universes = skin_info.get('universes', ['Runeterra'])
+        self.Skinlines = skin_info.get('skinlines', ['Base'])
+        if not self.Universes:
+            self.Universes = ["Runeterra"]
+        if not self.Skinlines:
+            self.Skinlines = ["Base"]
+        self.Chromas = skin_info.get('chromas', [])
+
+        # Multimedia
+        self.Splash = skin_info.get('splash', None)
+        self.Loadscreen = skin_info.get('loadscreen', None)
+        self.Videos = skin_info.get('videos', [])
+
+        # Additional info
+        self.Description = skin_info.get('description', f'https://universe.leagueoflegends.com/en_US/story/champion/{self.Champion}/')
+        if not self.Description:
+            self.Description = f'https://universe.leagueoflegends.com/en_US/story/champion/{self.Champion}/'
+        self.Voice_Actors = skin_info.get('voice_actors', [])
+        self.New_Effects = skin_info.get('new_effects', False)
+        self.New_Animations = skin_info.get('new_animations', False)
+        self.New_Recall = skin_info.get('new_recall', False)
+        self.New_Voice = skin_info.get('new_voice', False)
+        self.New_Quotes = skin_info.get('new_quotes', False)
+
+        # Create the dictionary for JSON output
         self.create_json_format()
 
     def create_json_format(self):
@@ -28,13 +47,26 @@ class Skin:
             "Availability": self.Availability,
             "Loot_findable": self.Loot_findable,
             "Universes": self.Universes,
-            "Skinline": self.Skinline,
-            "Splash": self.Splash_img,
-            "Animations": self.Animations_video
+            "Skinlines": self.Skinlines,
+            "Description": self.Description,
+            "Voice_Actors": self.Voice_Actors,
+            "New_Effects": self.New_Effects,
+            "New_Animations": self.New_Animations,
+            "New_Recall": self.New_Recall,
+            "New_Voice": self.New_Voice,
+            "New_Quotes": self.New_Quotes,
+            "Splash": self.Splash,
+            "Loadscreen": self.Loadscreen,
+            "Chromas": self.Chromas,
+            "Videos": self.Videos
         }
 
+    def to_dict(self):
+        """Return the skin data as a Python dict for JSON serialization"""
+        return self.skin_data
+
     def __str__(self):
-        final_str = f""
-        for k,v in self.skin_data.items():
+        final_str = ""
+        for k, v in self.skin_data.items():
             final_str += f"{k}: {v}\n"
         return final_str
