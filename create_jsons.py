@@ -3,7 +3,7 @@ import time
 from json_storage import JSON_Storage
 from skin import Skin
 from skinscraper import SkinScraper
-from skinranker_tester import SkinScraper2
+from skinscraper_tester import SkinScraper2
 import random
 
 
@@ -23,21 +23,21 @@ def create_skin_objects(url_by_skin):
             time.sleep(wait)
         except:
             print(f"ERROR OCCURRED ON {skin["Skin"]}")
-            print(f"{i + 1} skins were saved, the first is {first_skin} and the last is {skin["Skin"]}")
+            if i > 0:
+                print(f"{i} skins were saved, the first is {first_skin} and the last is {url_by_skin[i-1]["Skin"]}")
             storage.to_flat_json("checkpoint_flat.json")
             storage.to_champ_json("checkpoint_champ.json")
             return False
     print(f"{i + 1} skins were saved, the first is {first_skin} and the last is {skin["Skin"]}")
-    storage.to_flat_json("Test_flat.json")
-    storage.to_champ_json("Test_champ.json")
+    storage.to_flat_json("flat.json")
+    storage.to_champ_json("champ.json")
     return True
 
 
 if __name__ == '__main__':
-    scraper = SkinScraper("https://lolskin.info/data/homepage/en-us.json")
-    #champ_skins = scraper.get_skin_urls()
-    champ_skins = [{'Skin': 'Reindeer Smolder', 'Url': 'https://lolskin.info//en-us/skin/901011'}, {"Skin": 'Spirit Blossom Teemo', 'Url': 'https://lolskin.info/en-us/skin/17054'},
-                   {'Skin': 'La Ilusión Draven', 'Url':'https://lolskin.info/en-us/skin/119048'}]
+    scraper = SkinScraper2("https://lolskin.info/data/homepage/en-us.json")
+    champ_skins = scraper.get_skin_urls()
+    # champ_skins = [{'Skin': 'Reindeer Smolder', 'Url': 'https://lolskin.info//en-us/skin/901011'}, {"Skin": 'Spirit Blossom Teemo', 'Url': 'https://lolskin.info/en-us/skin/17054'}, {'Skin': 'La Ilusión Draven', 'Url':'https://lolskin.info/en-us/skin/119048'}]
 #     champ_skins = [{'Skin': 'Reindeer Smolder', 'Url': 'https://lolskin.info//en-us/skin/901011'},
 # {'Skin': 'Smolder', 'Url': 'https://lolskin.info//en-us/skin/901000'},
 # {'Skin': 'Heavenscale Smolder', 'Url': 'https://lolskin.info//en-us/skin/901001'},

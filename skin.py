@@ -27,7 +27,6 @@ class Skin:
         self.Description = skin_info.get('description', f'https://universe.leagueoflegends.com/en_US/story/champion/{self.Champion}/')
         if not self.Description:
             self.Description = f'https://universe.leagueoflegends.com/en_US/story/champion/{self.Champion}/'
-        self.Voice_Actors = skin_info.get('voice_actors', [])
         self.New_Effects = skin_info.get('new_effects', False)
         self.New_Animations = skin_info.get('new_animations', False)
         self.New_Recall = skin_info.get('new_recall', False)
@@ -50,7 +49,6 @@ class Skin:
             "Universes": self.Universes,
             "Skinlines": self.Skinlines,
             "Description": self.Description,
-            "Voice_Actors": self.Voice_Actors,
             "New_Effects": self.New_Effects,
             "New_Animations": self.New_Animations,
             "New_Recall": self.New_Recall,
