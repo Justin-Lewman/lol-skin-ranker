@@ -7,7 +7,6 @@ import random
 def create_skin_objects(url_by_skin):
     # TODO construct a skin object for each skin
     all_skins = []
-    # Step 1, test for just smolder's skins
     for skin in url_by_skin:
         skin_obj = Skin(scraper.get_skin_info_using_url(skin["Url"]))
         all_skins.append(skin_obj)
@@ -15,10 +14,9 @@ def create_skin_objects(url_by_skin):
         wait = random.uniform(0.50135, 1.69)
         print(f"Skin: {skin["Skin"]} scraped, waiting {wait} seconds")
         time.sleep(wait)
-    # Step 2, save that skin - for now a local json should be fine
+    # Step 2, save the skins - for now a local json should be fine
     for skin in all_skins:
         print(skin)
-    # Step 3, make and save all skin objects
 
 
 if __name__ == '__main__':

@@ -17,16 +17,7 @@ class SkinScraper:
             skin_list.append({"Skin": champion["label"], "Url": "https://lolskin.info/"+champion["url"]})
         return skin_list
 
-
-    def get_skin_info_using_url(self,url):
-        """
-        Fetches lolskin.info skin page and extracts:
-          - base skin metadata
-          - chroma names
-          - YouTube video URLs
-          - splash/loadscreen images
-          - release, cost, rarity, etc.
-        """
+    def extract_json_from_url(self,url):
         html = requests.get(url, timeout=10).text
         soup = BeautifulSoup(html, "html.parser")
 
@@ -47,7 +38,6 @@ class SkinScraper:
         raw_json = json_matches[-1]
         cleaned = raw_json.replace("\\\"", "\"")
 
-
         try:
             data = json.loads(cleaned)
             data = data["children"][-1]
@@ -55,18 +45,22 @@ class SkinScraper:
             print("JSON failed to parse. Raw extract:")
             print(raw_json[:1500])
             raise
+        return data
 
-        # # -----------------------------
-        # # Step 2: Navigate to the actual skin object
-        # # -----------------------------
+
+    def get_skin_info_using_url(self,url):
+        """
+        Fetches lolskin.info skin page and extracts:
+          - base skin metadata
+          - chroma names
+          - YouTube video URLs
+          - splash/loadscreen images
+          - release, cost, rarity, etc.
+        """
+        data = self.extract_json_from_url(url)
         while "main" not in data["className"]:
             data = data["children"][-1]
         data = data["children"][-2][-1]
-        # print(json.dumps(data, indent=4, ensure_ascii=False))
-        #
-        # # -----------------------------
-        # # Step 3: Build clean result
-        # # -----------------------------
         skin_layer = data.get("skin")
         skin_info = {
             "champion": data.get("championName"),

@@ -35,6 +35,7 @@ class Skin:
         self.New_Quotes = skin_info.get('new_quotes', False)
 
         # Create the dictionary for JSON output
+        self.skin_data = dict()
         self.create_json_format()
 
     def create_json_format(self):
