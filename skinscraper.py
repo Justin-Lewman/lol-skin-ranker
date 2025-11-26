@@ -38,6 +38,8 @@ class SkinScraper:
         raw_json = json_matches[-1]
         # cleaned = raw_json.replace("\\\"", "\"")
         cleaned = raw_json.encode('utf-8').decode('unicode_escape')
+        # TODO this needs to be better cleaned, it technically works for now but introduces a TON of typos to gurantee it wont crash
+        # Need to fix: ', emdash, ", any special chars like in la iluson
         try:
             data = json.loads(cleaned)
             data = data["children"][-1]
