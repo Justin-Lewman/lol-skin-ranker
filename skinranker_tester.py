@@ -5,7 +5,7 @@ import bs4
 import requests
 from bs4 import BeautifulSoup
 
-class SkinScraper:
+class SkinScraper2:
     def __init__(self, url):
         self.url = url
 
@@ -16,6 +16,50 @@ class SkinScraper:
         for champion in data:
             skin_list.append({"Skin": champion["label"], "Url": "https://lolskin.info/"+champion["url"]})
         return skin_list
+
+
+    def extract_skin_json(self, raw_text):
+        """
+        Extracts the balanced JSON object that begins at `"skin": {`
+        inside the lolskin.info React Flight payload.
+        """
+
+        # Find `"skin":{` position
+        start = re.search(r'"skin"\s*:\s*\{', raw_text)
+        if not start:
+            raise ValueError("Could not find the 'skin' root in the raw text")
+
+        start_index = start.start() + raw_text[start.start():].find('{')
+        # Walk forward to find matching closing brace
+        depth = 0
+        i = start_index
+        in_string = False
+        escape = False
+
+        while i < len(raw_text):
+            c = raw_text[i]
+
+            if escape:
+                escape = False
+            elif c == '\\':
+                escape = True
+            elif c == '"':
+                in_string = not in_string
+            elif not in_string:
+                if c == '{':
+                    depth += 1
+                elif c == '}':
+                    depth -= 1
+                    if depth == 0:
+                        # Extract inclusive object
+                        json_str = raw_text[start_index:i + 1]
+                        print(json_str)
+                        return json.loads(json_str)
+
+            i += 1
+
+        raise ValueError("Unbalanced braces while extracting skin JSON")
+
 
     def extract_json_from_url(self,url):
         html = requests.get(url, timeout=10).text
@@ -37,31 +81,19 @@ class SkinScraper:
         # Usually the LAST {...} is the actual skin JSON object
         raw_json = json_matches[-1]
         # cleaned = raw_json.replace("\\\"", "\"")
-        cleaned = raw_json.encode('utf-8').decode('unicode_escape')
+        # cleaned = raw_json.encode('utf-8').decode('unicode_escape')
         # TODO this needs to be better cleaned, it technically works for now but introduces a TON of typos to gurantee it wont crash
-        # Need to fix: ', emdash, ", any special chars like in la iluson
-        # Try:
-        # cleaned = re.sub(r'//.*', '', raw_json)
-        # cleaned = cleaned.replace('\n', '\\n')
-        # cleaned = cleaned.replace('\\"', '"').replace('"', '\\"').replace('\\\\"', '\\"')
-        # cleaned = cleaned.replace('\\"{', '{').replace('}\\"', '}')
-        # OR leave as is and fix characters down when you extract them
+
 
         try:
-            data = json.loads(cleaned)
-            data = data["children"][-1]
+            data = self.extract_skin_json(raw_json)
+            print(data)
+            #data = data["children"][-1]
         except Exception:
             print("JSON failed to parse. Raw extract:")
             print(raw_json)
             raise
         return data
-
-
-    def fix_mojibake(self, s):
-        try:
-            return s.encode('latin1').decode('utf8')
-        except:
-            return s
 
 
     def get_skin_info_using_url(self,url):
@@ -78,7 +110,6 @@ class SkinScraper:
             data = data["children"][-1]
         data = data["children"][-2][-1]
         skin_layer = data.get("skin")
-        print(self.fix_mojibake(skin_layer.get("description")))
         skin_info = {
             "champion": data.get("championName"),
             "skin_name": skin_layer.get("name"),
@@ -113,6 +144,4 @@ class SkinScraper:
                 if isinstance(vid_id, str)
             ]
         }
-        # TODO This doesn't work? Honestly I really need a solution for this but right now I don't care
-        # skin_info = {key: self.fix_mojibake(value) for key,value in skin_info}
         return skin_info
