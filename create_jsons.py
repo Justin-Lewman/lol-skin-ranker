@@ -29,7 +29,7 @@ def create_skin_objects(url_by_skin):
             return False
     print(f"{i + 1} skins were saved, the first is {first_skin} and the last is {skin["Skin"]}")
     storage.to_flat_json("Test_flat.json")
-    storage.to_champ_json("Tes_champ.json")
+    storage.to_champ_json("Test_champ.json")
     return True
 
 
