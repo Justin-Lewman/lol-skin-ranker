@@ -2,8 +2,8 @@ import time
 
 from json_storage import JSON_Storage
 from skin import Skin
+from skinscraperOLD import SkinScraperOld
 from skinscraper import SkinScraper
-from skinscraper_tester import SkinScraper2
 import random
 
 
@@ -12,16 +12,17 @@ def create_skin_objects(url_by_skin):
     all_skins = []
     storage = JSON_Storage()
     first_skin = url_by_skin[0]["Skin"]
-    for i, skin in enumerate(url_by_skin[:50]):
+    for i, skin in enumerate(url_by_skin):
         try:
             skin_obj = Skin(scraper.get_skin_info_using_url(skin["Url"]))
             all_skins.append(skin_obj)
             # Add delay for scraping to not get rate-limited
-            wait = random.uniform(0.34512, 1.6653)
+            wait = random.uniform(0.54512, 1.62931)
             storage.add_skin(skin_obj)
             print(f"Skin {i+1}: {skin["Skin"]} added to storage\nWaiting {wait} seconds")
             time.sleep(wait)
-        except:
+        except Exception as e:
+            print(e)
             print(f"ERROR OCCURRED ON {skin["Skin"]}")
             if i > 0:
                 print(f"{i} skins were saved, the first is {first_skin} and the last is {url_by_skin[i-1]["Skin"]}")
@@ -35,13 +36,9 @@ def create_skin_objects(url_by_skin):
 
 
 if __name__ == '__main__':
-    scraper = SkinScraper2("https://lolskin.info/data/homepage/en-us.json")
+    scraper = SkinScraper("https://lolskin.info/data/homepage/en-us.json")
     champ_skins = scraper.get_skin_urls()
-    # champ_skins = [{'Skin': 'Reindeer Smolder', 'Url': 'https://lolskin.info//en-us/skin/901011'}, {"Skin": 'Spirit Blossom Teemo', 'Url': 'https://lolskin.info/en-us/skin/17054'}, {'Skin': 'La Ilusión Draven', 'Url':'https://lolskin.info/en-us/skin/119048'}]
-#     champ_skins = [{'Skin': 'Reindeer Smolder', 'Url': 'https://lolskin.info//en-us/skin/901011'},
-# {'Skin': 'Smolder', 'Url': 'https://lolskin.info//en-us/skin/901000'},
-# {'Skin': 'Heavenscale Smolder', 'Url': 'https://lolskin.info//en-us/skin/901001'},
-#                    {'Skin': 'Prestige Winterblessed Mel', 'Url': 'https://lolskin.info/en-us/skin/800010'},
-#                    {'Skin': "Risen Legend Kai'Sa", 'Url': 'https://lolskin.info/en-us/skin/145070'}]
+    # champ_skins = [{'Skin': 'Zaahen', 'Url': 'https://lolskin.info/en-us/skin/904000'}, {"Skin": 'Spirit Blossom Teemo', 'Url': 'https://lolskin.info/en-us/skin/17054'}, {'Skin': 'La Ilusión Draven', 'Url':'https://lolskin.info/en-us/skin/119048'},
+    #                {'Skin': 'Count Vladimir', 'Url':'https://lolskin.info/en-us/skin/8001'}]
     create_skin_objects(champ_skins)
 

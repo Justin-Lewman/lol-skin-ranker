@@ -1,12 +1,11 @@
 import json
 import re
-import unicodedata
 
 import bs4
 import requests
 from bs4 import BeautifulSoup
 
-class SkinScraper2:
+class SkinScraperOld:
     def __init__(self, url):
         self.url = url
 
@@ -17,40 +16,6 @@ class SkinScraper2:
         for champion in data:
             skin_list.append({"Skin": champion["label"], "Url": "https://lolskin.info/"+champion["url"]})
         return skin_list
-
-
-    def clean_raw_json(self, raw_text):
-        """
-        Extracts the balanced JSON object that begins at `"skin": {`
-        inside the lolskin.info React Flight payload.
-        """
-        # Find `"skin":{` position
-        # pattern = r'\{\"skin\":\{'
-        # start = re.findall(pattern, raw_text)
-        start = raw_text.find('{\\"skin\\":{')
-        if not start:
-            print("couldn't find start")
-        stack = []
-        finish = 0
-        for idx,token in enumerate(raw_text[start:]):
-            if token == "{":
-                stack.append("{")
-            if token == "}":
-                stack.pop()
-                if not stack:
-                    finish = idx+start+1
-                    break
-        if finish == 0:
-            print("couldn't find finish")
-        # need to find ending bracket
-        raw_text = raw_text[start:finish]
-        clean_text = raw_text.encode().decode('unicode_escape')
-
-        clean_json = clean_text
-        # clean_json = raw_text
-        return clean_json
-
-
 
     def extract_json_from_url(self,url):
         html = requests.get(url, timeout=10).text
@@ -71,20 +36,32 @@ class SkinScraper2:
 
         # Usually the LAST {...} is the actual skin JSON object
         raw_json = json_matches[-1]
-        # cleaned = raw_json.encode('utf-8').decode('unicode_escape')
+        # cleaned = raw_json.replace("\\\"", "\"")
+        cleaned = raw_json.encode('utf-8').decode('unicode_escape')
         # TODO this needs to be better cleaned, it technically works for now but introduces a TON of typos to gurantee it wont crash
-        cleaned = self.clean_raw_json(raw_json)
+        # Need to fix: ', emdash, ", any special chars like in la iluson
+        # Try:
+        # cleaned = re.sub(r'//.*', '', raw_json)
+        # cleaned = cleaned.replace('\n', '\\n')
+        # cleaned = cleaned.replace('\\"', '"').replace('"', '\\"').replace('\\\\"', '\\"')
+        # cleaned = cleaned.replace('\\"{', '{').replace('}\\"', '}')
+        # OR leave as is and fix characters down when you extract them
 
         try:
             data = json.loads(cleaned)
-            print(data)
-            #data = data["children"][-1]
-        except json.JSONDecodeError as e:
-            print("JSON decode error:", e)
+            data = data["children"][-1]
+        except Exception:
             print("JSON failed to parse. Raw extract:")
-            print(cleaned)
+            print(raw_json)
             raise
         return data
+
+
+    def fix_mojibake(self, s):
+        try:
+            return s.encode('latin1').decode('utf8')
+        except:
+            return s
 
 
     def get_skin_info_using_url(self,url):
@@ -96,28 +73,24 @@ class SkinScraper2:
           - splash/loadscreen images
           - release, cost, rarity, etc.
         """
-        def force_utf8(text: str) -> str:
-            # Fix broken characters safely
-            utf8 = text.encode("utf-8", errors="replace").decode("utf-8")
-            try:
-                return utf8.encode("latin1").decode("utf-8")
-            except UnicodeDecodeError:
-                return utf8  # leave untouched if it wasn’t mojibake
-
         data = self.extract_json_from_url(url)
-        print("data parsed")
+        while "main" not in data["className"]:
+            data = data["children"][-1]
+        data = data["children"][-2][-1]
         skin_layer = data.get("skin")
+        print(self.fix_mojibake(skin_layer.get("description")))
         skin_info = {
-            "champion": force_utf8(data.get("championName")),
-            "skin_name": force_utf8(skin_layer.get("name")),
+            "champion": data.get("championName"),
+            "skin_name": skin_layer.get("name"),
             "price": skin_layer.get("cost"),
             "release_date": skin_layer.get("release"),
             "rarity": skin_layer.get("rarity"),
             "availability": skin_layer.get("availability"),
             "loot_eligible": skin_layer.get("looteligible"),
-            "skinlines": [force_utf8(line["name"]) for line in skin_layer.get("skinLines", [])],
-            "universes": [force_utf8(u["name"]) for u in skin_layer.get("skinUniverses", [])],
-            "description": force_utf8(skin_layer.get("description")),
+            "skinlines": [line["name"] for line in skin_layer.get("skinLines", [])],
+            "universes": [u["name"] for u in skin_layer.get("skinUniverses", [])],
+            "description": skin_layer.get("description"),
+            "voice_actors": skin_layer.get("voiceActor", []),
 
             # Features
             "new_effects": skin_layer.get("newEffects", False),
