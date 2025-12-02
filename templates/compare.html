@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skin Comparison</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        .skin-card {
+            width: 45%;
+            background: #1c1c1c;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        img {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background: #2e6ce6;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        button {
+            background: #28a745;
+            border: none;
+            padding: 12px 18px;
+            font-size: 16px;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e7e34;
+        }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align:center;">Which Skin Do You Prefer?</h1>
+
+<div class="container">
+
+    <!-- ======================= SKIN A ======================= -->
+    <div class="skin-card">
+
+        <img src="{{ skin_a.splash }}" alt="Splash Art">
+
+        <div class="tags">
+            {% for key, value in skin_a.items() %}
+                {% if key.startswith('new_') and value %}
+                    <span class="tag">
+                        {{ key.replace("new_", "").replace("_", " ").title() }}
+                    </span>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <h2>{{ skin_a.champion }} – {{ skin_a.skin_name }}</h2>
+
+        <form method="POST" action="/choose">
+            <input type="hidden" name="chosen_skin" value="skin_a">
+            <button type="submit">Choose This Skin</button>
+        </form>
+
+    </div>
+
+
+    <!-- ======================= SKIN B ======================= -->
+    <div class="skin-card">
+
+        <img src="{{ skin_b.splash }}" alt="Splash Art">
+
+        <div class="tags">
+            {% for key, value in skin_b.items() %}
+                {% if key.startswith('new_') and value %}
+                    <span class="tag">
+                        {{ key.replace("new_", "").replace("_", " ").title() }}
+                    </span>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <h2>{{ skin_b.champion }} – {{ skin_b.skin_name }}</h2>
+
+        <form method="POST" action="/choose">
+            <input type="hidden" name="chosen_skin" value="skin_b">
+            <button type="submit">Choose This Skin</button>
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>
