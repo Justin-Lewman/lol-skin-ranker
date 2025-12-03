@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results</title>
+</head>
+<body>
+<h1>Ranking Results</h1>
+
+<a href="/">Back</a>
+<br><br>
+
+<table border="1" cellpadding="6">
+    <tr>
+        <th>Rank</th>
+        <th>Skin</th>
+        <th>Champion</th>
+        <th>Elo</th>
+        <th>Matches</th>
+    </tr>
+
+    {% for r in rows %}
+    <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ r.Skin_Name }}</td>
+        <td>{{ r.Champion }}</td>
+        <td>{{ r.Elo }}</td>
+        <td>{{ r.Matches }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>

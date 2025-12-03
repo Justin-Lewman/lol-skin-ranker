@@ -1,6 +1,10 @@
 class Skin:
     def __init__(self, skin_info):
         # Required fields
+        self.ID = skin_info.get("id")
+        self.Elo = skin_info.get("ELO")
+        self.Uncertainty = skin_info.get("Uncertainty")
+        self.Matches = skin_info.get("Matches")
         self.Champion = skin_info.get('champion', 'Unknown')
         self.Skin_Name = skin_info.get('skin_name', 'Unknown')
         self.Price = skin_info.get('price', 'Unknown')
@@ -39,6 +43,10 @@ class Skin:
 
     def create_json_format(self):
         self.skin_data = {
+            "ID": self.ID,
+            "ELO": self.Elo,
+            "Uncertainty": self.Uncertainty,
+            "Matches": self.Matches,
             "Champion": self.Champion,
             "Skin_Name": self.Skin_Name,
             "Price": self.Price,

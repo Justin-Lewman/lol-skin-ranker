@@ -11,11 +11,7 @@ class SkinScraper:
         self.url = url
 
     def get_skin_urls(self):
-        try:
-            response = requests.get(self.url)
-        except requests.exceptions.RequestException as e:
-            print(f"timed out on {self.url}")
-            print(e)
+        response = requests.get(self.url, timeout=10)
         data = response.json()["tree"][0]["children"]
         skin_list = []
         for champion in data:
@@ -112,9 +108,14 @@ class SkinScraper:
                 print(f"broke on {text}")
                 return ""
 
+        skin_id = url.split("/")[-1]
         data = self.extract_json_from_url(url)
         skin_layer = data.get("skin")
         skin_info = {
+            "id": skin_id,
+            "ELO": 1000,
+            "Uncertainty": 40,
+            "Matches": 0,
             "champion": force_utf8(data.get("championName")),
             "skin_name": force_utf8(skin_layer.get("name")),
             "price": skin_layer.get("cost"),

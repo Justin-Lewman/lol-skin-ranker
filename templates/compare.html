@@ -1,123 +1,252 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Skin Comparison</title>
-
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #111;
-            color: white;
             padding: 20px;
+            background: #f5f5f5;
         }
+        h1 { text-align: center; }
 
         .container {
             display: flex;
-            gap: 40px;
-            justify-content: center;
+            gap: 20px;
         }
 
-        .skin-card {
-            width: 45%;
-            background: #1c1c1c;
-            padding: 20px;
+        .card {
+            background: white;
             border-radius: 12px;
-            text-align: center;
+            padding: 20px;
+            width: 50%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        img {
+        .splash {
             width: 100%;
             border-radius: 10px;
             margin-bottom: 10px;
         }
 
-        .tags {
+        .tag-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 15px;
         }
 
         .tag {
-            background: #2e6ce6;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
+            background: #e3e3e3;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.9em;
         }
 
         button {
-            background: #28a745;
+            margin-top: 15px;
+            padding: 10px 15px;
+            font-size: 1rem;
+            background: #4285f4;
             border: none;
-            padding: 12px 18px;
-            font-size: 16px;
             color: white;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
         }
 
         button:hover {
-            background: #1e7e34;
+            background: #2f6ad9;
         }
+
+        .video-container {
+            margin-top: 20px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 260px;
+            border-radius: 10px;
+        }
+
     </style>
 </head>
 <body>
 
-<h1 style="text-align:center;">Which Skin Do You Prefer?</h1>
+<h1>Skin Comparison</h1>
+
+<div style="width: 100%; background: #ddd; border-radius: 8px; margin-bottom: 20px;">
+    {% if total > 0 %}
+    <div style="width: calc({{ progress }} / {{ total }} * 100%); background: #4caf50; height: 20px; border-radius: 8px;">
+    </div>
+    {% else %}
+    <div style="width: 0%; background: #4caf50; height: 20px; border-radius: 8px;">
+    </div>
+    {% endif %}
+</div>
+<p>{{ progress }} / {{ total }} comparisons completed</p>
 
 <div class="container">
 
-    <!-- ======================= SKIN A ======================= -->
-    <div class="skin-card">
+    <!-- CARD 1 -->
+    <div class="card">
 
-        <img src="{{ skin_a.splash }}" alt="Splash Art">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h2>{{ skin1["Skin_Name"] }}</h2>
+            <form action="/choose" method="POST" style="margin:0;">
+                <input type="hidden" name="winner" value="{{ skin1['ID'] }}">
+                <input type="hidden" name="loser" value="{{ skin2['ID'] }}">
+                <input type="hidden" name="champs" value="{{ champs }}">
+                <button type="submit">Choose This Skin</button>
+            </form>
+        </div>
 
-        <div class="tags">
-            {% for key, value in skin_a.items() %}
-                {% if key.startswith('new_') and value %}
-                    <span class="tag">
-                        {{ key.replace("new_", "").replace("_", " ").title() }}
-                    </span>
-                {% endif %}
+        <img class="splash" src="{{ skin1['Splash'] }}" alt="Splash Art">
+
+        <div class="tag-list">
+            {% if skin1["New_Effects"] %}<div class="tag">New Effects</div>{% endif %}
+            {% if skin1["New_Animations"] %}<div class="tag">New Animations</div>{% endif %}
+            {% if skin1["New_Recall"] %}<div class="tag">New Recall</div>{% endif %}
+            {% if skin1["New_Voice"] %}<div class="tag">New Voice</div>{% endif %}
+            {% if skin1["New_Quotes"] %}<div class="tag">New Quotes</div>{% endif %}
+        </div>
+
+        {% if skin1["Videos"]|length > 0 %}
+            {% set yt = skin1["Videos"][0] %}
+            {% set vid = yt.split('v=')[-1] %}
+            <div class="video-container" style="margin-top:10px;">
+                <iframe src="https://www.youtube.com/embed/{{ vid }}"
+                    allowfullscreen
+                    style="height:520px;">
+                </iframe>
+            </div>
+        {% endif %}
+
+        <div><strong>Champion:</strong> {{ skin1["Champion"] }}</div>
+        <div><strong>Skin:</strong> {{ skin1["Skin_Name"] }}</div>
+        <div><strong>Price:</strong> {{ skin1["Price"] }}</div>
+        <div><strong>Rarity:</strong> {{ skin1["Rarity"] }}</div>
+        <div><strong>Release:</strong> {{ skin1["Release"] }}</div>
+        <div><strong>Availability:</strong> {{ skin1["Availability"] }}</div>
+
+        <div class="section-title">Universes</div>
+        <div class="tag-list">
+            {% for u in skin1["Universes"] %}
+                <div class="tag">{{ u }}</div>
             {% endfor %}
         </div>
 
-        <h2>{{ skin_a.champion }} – {{ skin_a.skin_name }}</h2>
+        <div class="section-title">Skinlines</div>
+        <div class="tag-list">
+            {% for s in skin1["Skinlines"] %}
+                <div class="tag">{{ s }}</div>
+            {% endfor %}
+        </div>
 
-        <form method="POST" action="/choose">
-            <input type="hidden" name="chosen_skin" value="skin_a">
+        <div class="section-title">Description</div>
+        <div>{{ skin1["Description"] }}</div>
+
+        {% if skin1["Chromas"]|length > 0 %}
+            <br>
+            <div class="section-title">Chromas</div>
+            <div class="tag-list">
+                {% for c in skin1["Chromas"] %}
+                    <div class="tag">{{ c }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form action="/choose" method="POST" style="margin:0;">
+            <input type="hidden" name="winner" value="{{ skin1['ID'] }}">
+            <input type="hidden" name="loser" value="{{ skin2['ID'] }}">
+            <input type="hidden" name="champs" value="{{ champs }}">
             <button type="submit">Choose This Skin</button>
         </form>
 
     </div>
 
+    <!-- CARD 2 -->
+    <div class="card">
 
-    <!-- ======================= SKIN B ======================= -->
-    <div class="skin-card">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h2>{{ skin2["Skin_Name"] }}</h2>
+            <form action="/choose" method="POST" style="margin:0;">
+                <input type="hidden" name="winner" value="{{ skin2['ID'] }}">
+                <input type="hidden" name="loser" value="{{ skin1['ID'] }}">
+                <input type="hidden" name="champs" value="{{ champs }}">
+                <button type="submit">Choose This Skin</button>
+            </form>
+        </div>
 
-        <img src="{{ skin_b.splash }}" alt="Splash Art">
 
-        <div class="tags">
-            {% for key, value in skin_b.items() %}
-                {% if key.startswith('new_') and value %}
-                    <span class="tag">
-                        {{ key.replace("new_", "").replace("_", " ").title() }}
-                    </span>
-                {% endif %}
+        <img class="splash" src="{{ skin2['Splash'] }}" alt="Splash Art">
+
+        <!-- NEW: Features as tags -->
+        <div class="tag-list">
+            {% if skin2["New_Effects"] %}<div class="tag">New Effects</div>{% endif %}
+            {% if skin2["New_Animations"] %}<div class="tag">New Animations</div>{% endif %}
+            {% if skin2["New_Recall"] %}<div class="tag">New Recall</div>{% endif %}
+            {% if skin2["New_Voice"] %}<div class="tag">New Voice</div>{% endif %}
+            {% if skin2["New_Quotes"] %}<div class="tag">New Quotes</div>{% endif %}
+        </div>
+
+
+        {% if skin2["Videos"]|length > 0 %}
+            {% set yt = skin2["Videos"][0] %}
+            {% set vid = yt.split('v=')[-1] %}
+            <div class="video-container" style="margin-top:10px;">
+                <iframe src="https://www.youtube.com/embed/{{ vid }}"
+                        allowfullscreen
+                        style="height:520px;">
+                </iframe>
+            </div>
+        {% endif %}
+
+        <div><strong>Champion:</strong> {{ skin2["Champion"] }}</div>
+        <div><strong>Skin:</strong> {{ skin2["Skin_Name"] }}</div>
+        <div><strong>Price:</strong> {{ skin2["Price"] }}</div>
+        <div><strong>Rarity:</strong> {{ skin2["Rarity"] }}</div>
+        <div><strong>Release:</strong> {{ skin2["Release"] }}</div>
+        <div><strong>Availability:</strong> {{ skin2["Availability"] }}</div>
+
+        <div class="section-title">Universes</div>
+        <div class="tag-list">
+            {% for u in skin2["Universes"] %}
+                <div class="tag">{{ u }}</div>
             {% endfor %}
         </div>
 
-        <h2>{{ skin_b.champion }} – {{ skin_b.skin_name }}</h2>
+        <div class="section-title">Skinlines</div>
+        <div class="tag-list">
+            {% for s in skin2["Skinlines"] %}
+                <div class="tag">{{ s }}</div>
+            {% endfor %}
+        </div>
 
-        <form method="POST" action="/choose">
-            <input type="hidden" name="chosen_skin" value="skin_b">
+        <div class="section-title">Description</div>
+        <div>{{ skin2["Description"] }}</div>
+
+        {% if skin2["Chromas"]|length > 0 %}
+            <br>
+            <div class="section-title">Chromas</div>
+            <div class="tag-list">
+                {% for c in skin2["Chromas"] %}
+                    <div class="tag">{{ c }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form action="/choose" method="POST" style="margin:0;">
+            <input type="hidden" name="winner" value="{{ skin2['ID'] }}">
+            <input type="hidden" name="loser" value="{{ skin1['ID'] }}">
+            <input type="hidden" name="champs" value="{{ champs }}">
             <button type="submit">Choose This Skin</button>
         </form>
 
     </div>
 
 </div>
+
+<br><br>
 
 </body>
 </html>
