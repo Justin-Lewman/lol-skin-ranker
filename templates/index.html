@@ -7,6 +7,11 @@
     <h1>Select Champions to Compare</h1>
 
     <form method="POST">
+        <label for="accuracy">Accuracy (1 = faster, 10 = best ranking):</label>
+        <input type="range" id="accuracy" name="accuracy" min="1" max="10" value="5"
+               oninput="accuracyValue.textContent = this.value">
+        <span id="accuracyValue">5</span>
+        <br><br>
         {% for champ in champions %}
             <label>
                 <input type="checkbox" name="champions" value="{{ champ }}">
