@@ -3,6 +3,9 @@ from flask import Flask, render_template, request, redirect, url_for
 import random
 import pandas as pd
 from itertools import combinations
+import json
+import atexit
+import os
 
 from reset_elo import reset_elo
 
@@ -12,7 +15,13 @@ app = Flask(__name__)
 database = pd.read_json("test_elo_data.json")
 
 # Track already compared pairs globally
-already_compared = set()  # stores "minID-maxID" strings
+# Load previously compared pairs
+if os.path.exists("already_compared.json"):
+    with open("already_compared.json", "r") as f:
+        already_compared = set(json.load(f))
+else:
+    already_compared = set()
+
 
 pair_queue = []        # List of (id1, id2) tuples for THIS session
 pair_index = 0         # Tracks next index to inspect in pair_queue
@@ -34,7 +43,7 @@ def precompute_pairs(filtered_df=None, accuracy=5):
     df = filtered_df if filtered_df is not None else database
     ids = df["ID"].tolist()
     n = len(ids)
-    print(n, accuracy_level)
+    print(f"{n} pairs on accuracy level {accuracy_level}")
 
     # --- Small collections: full pairwise ---
     if n <= 5:
@@ -93,8 +102,6 @@ def choose_match():
         pair_index += 1
 
         if key in already_compared:
-            print(f"{key} was skipped")
-            # already rated earlier — skip
             continue
 
         # mark as seen/rated for progress tracking (we still wait to record Elo in record_match)
@@ -105,8 +112,6 @@ def choose_match():
         return skin1, skin2
 
     return None
-
-
 
 def record_match(winner_id, loser_id):
     K = 32
@@ -128,6 +133,18 @@ def record_match(winner_id, loser_id):
 
     print(f"{winner['Skin_Name']} won and Elo is now {new_winner_elo}")
     print(f"{loser['Skin_Name']} lost and Elo is now {new_loser_elo}")
+
+def save_state():
+    # Save updated Elo + Matches
+    print(already_compared)
+    database.to_json("test_elo_data.json", orient="records")
+
+    # Save compared pairs
+    with open("already_compared.json", "w") as nf:
+        json.dump(list(already_compared), nf)
+    print("data saved")
+
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -203,5 +220,6 @@ def results():
     )
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    atexit.register(save_state)
+    app.run(debug=True, use_reloader=False)
     # reset_elo()
